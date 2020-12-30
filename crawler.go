@@ -58,21 +58,9 @@ func (mc *MyCrawler) isValidURL() bool {
 
 // crawl is function to crawl the input url
 func (mc *MyCrawler) crawl(URL string, depth int) {
-	// fmt.Println(URL)
-	// var netTransport = &http.Transport{
-	// 	Dial: (&net.Dialer{
-	// 		Timeout: 50 * time.Second,
-	// 	}).Dial,
-	// 	TLSHandshakeTimeout: 50 * time.Second,
-	// }
-	// var netClient = &http.Client{
-	// 	Timeout:   time.Second * 50,
-	// 	Transport: netTransport,
-	// }
-	// resp, err := netClient.Get(URL)
 	resp, err := http.Get(URL)
 	if depth <= 0 {
-		// fmt.Println("@@@@@@@@@@@@@@")
+		fmt.Println("skip")
 		return
 	}
 	if err != nil {
@@ -87,11 +75,11 @@ func (mc *MyCrawler) crawl(URL string, depth int) {
 			// fmt.Println("$$$$$", depth, strBody)
 			exURLs := mc.extractUrls(URL, strBody)
 			fetched := make(chan bool)
-			fmt.Println("<<<<<<<<", len(exURLs))
+			fmt.Println("<<<<<<<< leng of exURLs", len(exURLs))
 			for _, exURL := range exURLs {
 				go func(url string) {
 					if cmap.set(url) {
-						//fmt.Println("$$$$$", depth)
+						fmt.Println(">>>>>crawl", depth)
 						mc.crawl(url, depth-1)
 					}
 					fetched <- true
@@ -110,7 +98,6 @@ func (mc *MyCrawler) extractUrls(URL, body string) []string {
 	var urls []string
 	newURLs := mc.Rxp.FindAllStringSubmatch(body, -1)
 	fmt.Println("$$$$$$$$$", len(newURLs), mc.host)
-	//baseURL, _ := url.Parse(URL)
 	for _, v := range newURLs {
 		newURL := v[1]
 		fmt.Println(mc.host, newURL)
@@ -118,18 +105,7 @@ func (mc *MyCrawler) extractUrls(URL, body string) []string {
 		if err == nil {
 			if urltype.IsAbs() == true && strings.Contains(newURL, mc.host) {
 				urls = append(urls, newURL)
-			} else {
-				fmt.Println("skip")
 			}
-			// else if urltype.IsAbs() == false {
-			// 	urls = append(urls, baseURL.ResolveReference(urltype).String())
-			// } else if strings.HasPrefix(newURL, "//") {
-			// 	urls = append(urls, "http:"+newURL)
-			// } else if strings.HasPrefix(newURL, "/") {
-			// 	urls = append(urls, mc.BaseURL+newURL)
-			// } else {
-			// 	urls = append(urls, URL+newURL)
-			// }
 		}
 	}
 	return urls
